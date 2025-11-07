@@ -7,6 +7,40 @@
 
 ## 二、获取代码与镜像
 
+### 方式一：使用提供的 docker-compose.yml（推荐）
+
+项目根目录的 `docker-compose.yml` 已配置为使用 Docker Hub 上的镜像，**docker-compose 会自动拉取镜像**。
+
+> 手动拉取镜像（可选）：
+>
+> ```bash
+> docker pull hanxi011/ai_travel_planner-backend:latest
+> docker pull hanxi011/ai_travel_planner-frontend:latest
+> ```
+>
+1. **克隆仓库**
+
+
+```bash
+git clone https://github.com/jiadebushi/AI-TRAVEL-PLANNER.git
+cd AI_Travel_Planner
+```
+
+2. **配置环境变量**：
+
+   具体说明见[环境配置](## 三、配置环境变量（必做）)
+ ```bash
+cp travel_backend/.env.example travel_backend/.env
+# 编辑 travel_backend/.env，填入 API 密钥
+ ```
+
+3. **启动服务**：（在AI_Travel_Planner目录下运行）
+```bash
+docker-compose up -d
+```
+
+### 方式二：自己构建docker镜像
+
 1) **克隆仓库**
 
 ```bash
@@ -14,19 +48,18 @@ git clone https://github.com/jiadebushi/AI-TRAVEL-PLANNER.git
 cd AI_Travel_Planner
 ```
 
-2) **准备 Docker 镜像（两种方式二选一）**
-- 方式 A：直接拉取已有镜像
+2) **准备 Docker 镜像**
+- 本地构建（需要能访问基础镜像）（在AI_Travel_Planner目录下运行）
 
 ```bash
-docker pull hanxi011/ai_travel_planner-backend:latest
-docker pull hanxi011/ai_travel_planner-frontend:latest
+# 构建镜像
+docker-compose -f docker-compose-origin.yml build
 ```
 
-- 方式 B：本地构建（需要能访问基础镜像）
+3. **启动服务**：（在AI_Travel_Planner目录下运行）
 
-```bash
-cd AI_Travel_Planner
-docker-compose build
+```
+docker-compose -f docker-compose-origin.yml up -d
 ```
 
 ## 三、配置环境变量（必做）
@@ -39,7 +72,7 @@ cp travel_backend/.env.example travel_backend/.env
 # 编辑 travel_backend/.env，填入你自己的密钥与配置
 ```
 
-关键配置（示例，完整项见 `.env.example`）：
+**关键配置（示例，完整项见 `.env.example`）：**
 
 ```env
 # LLM（通义千问）
@@ -59,10 +92,11 @@ SUPABASE_SERVICE_KEY=你的_supabase_service_key
 
 说明：`.env` 文件不会被打包进镜像（已通过 `.dockerignore` 与 `travel_backend/.dockerignore` 排除），他人使用时也必须填入自己的密钥，安全不外泄。
 
-## 四、数据库配置（必做）
+**数据库配置**
+
 如果您使用自己的 Supabase 数据库，请按照以下步骤操作：
 
-- 在 travel_backend 目录下找到 database_schema.sql 文件。
+- 在 travel_backend 目录下找到 `database_schema.sql`文件。
 
 - 使用 Supabase SQL Editor 运行该文件，以创建所需的数据表。
 
@@ -71,22 +105,14 @@ SUPABASE_SERVICE_KEY=你的_supabase_service_key
 > ⚠️ 注意：如果未创建数据表，后端服务可能无法正常运行。
 >
 
-## 五、启动与访问
-
-1) **启动服务**（在AI_Travel_Planner目录下运行）
-
-```bash
-docker-compose up -d
-```
-
-2) **访问地址**
+## 四、访问地址
 
 - 前端：[http://localhost:3000](http://localhost:3000)
 - 后端 API：[http://localhost:8000](http://localhost:8000)
 - API 文档（Swagger）：[http://localhost:8000/docs](http://localhost:8000/docs)
 - 健康检查：[http://localhost:8000/health](http://localhost:8000/health)
 
-## 六、常用运维命令
+## 五、常用运维命令
 
 - 查看状态：
 
@@ -110,12 +136,12 @@ docker-compose down           # 停止并移除容器与网络
 docker-compose down -v        # 额外移除数据卷（谨慎）
 ```
 
-## 七、镜像安全与再分发说明
+## 六、镜像安全与再分发说明
 
 - 镜像内不包含任何 `.env` 或密钥文件，运行时通过 `docker-compose.yml` 的 `env_file: ./travel_backend/.env` 从宿主机注入。
 - 对外发布时，请连同 `travel_backend/.env.example` 一并提供，对方需复制为 `.env` 并填入自己的密钥后方可运行。
 
-## 八、故障排查（FAQ）
+## 七、故障排查（FAQ）
 
 - 前端无法访问后端
   - 确认后端容器健康：`curl http://localhost:8000/health`
@@ -128,7 +154,7 @@ docker-compose down -v        # 额外移除数据卷（谨慎）
 - 构建基础镜像失败 / 拉取慢
   - 配置 Docker 镜像源（参考 `README-Docker.md` 中“镜像源 403 错误”章节）。
 
-## 九、开发者提示
+## 八、开发者提示
 
 - 本地开发可直接在 `travel_frontend` 使用 `npm run dev` 并通过 Vite 代理到后端；生产镜像中由 Nginx 负责前端与后端 `/api` 的转发。
 

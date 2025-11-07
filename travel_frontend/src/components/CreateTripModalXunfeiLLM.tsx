@@ -197,20 +197,54 @@ function CreateTripModalXunfeiLLM({ isOpen, onClose, onSuccess }: CreateTripModa
       // 验证 URL 是否是讯飞大模型服务器（确保不是后端转接）
       if (!ws_url || typeof ws_url !== 'string') {
         console.error('[Xunfei LLM] Invalid ws_url:', ws_url)
-        setError('后端返回的 WebSocket URL 格式错误')
+        setError('后端返回的 WebSocket URL 格式错误：URL 为空或不是字符串类型')
+        return
+      }
+      
+      // 检查 URL 长度（如果 URL 过长可能有问题）
+      if (ws_url.length > 5000) {
+        console.error('[Xunfei LLM] URL too long:', ws_url.length)
+        setError('后端返回的 WebSocket URL 过长，可能存在问题。请检查后端 URL 生成逻辑。')
         return
       }
       
       if (!ws_url.includes('office-api-ast-dx.iflyaisol.com')) {
         console.error('[Xunfei LLM] Invalid server address in URL:', ws_url)
-        setError(`获取的 WebSocket URL 不是讯飞大模型服务器地址，请检查后端配置。当前URL: ${ws_url.substring(0, 100)}...`)
+        setError(`获取的 WebSocket URL 不是讯飞大模型服务器地址，请检查后端配置。\n\n当前URL: ${ws_url.substring(0, 150)}...\n\n预期服务器地址: office-api-ast-dx.iflyaisol.com`)
         return
       }
 
       // 检查 URL 是否以 wss:// 开头
       if (!ws_url.startsWith('wss://') && !ws_url.startsWith('ws://')) {
         console.error('[Xunfei LLM] Invalid WebSocket protocol:', ws_url.substring(0, 10))
-        setError('WebSocket URL 必须以 wss:// 或 ws:// 开头')
+        setError(`WebSocket URL 必须以 wss:// 或 ws:// 开头\n\n当前URL开头: ${ws_url.substring(0, 20)}`)
+        return
+      }
+      
+      // 尝试解析 URL 以验证格式
+      try {
+        const urlObj = new URL(ws_url)
+        console.log('[Xunfei LLM] URL parsed successfully:', {
+          protocol: urlObj.protocol,
+          hostname: urlObj.hostname,
+          pathname: urlObj.pathname,
+          searchParamsCount: urlObj.searchParams ? Array.from(urlObj.searchParams.keys()).length : 0,
+          hasSignature: urlObj.searchParams.has('signature'),
+          hasAccessKeyId: urlObj.searchParams.has('accessKeyId'),
+          hasAppId: urlObj.searchParams.has('appId')
+        })
+        
+        // 检查必要的参数
+        const requiredParams = ['accessKeyId', 'appId', 'utc', 'signature']
+        const missingParams = requiredParams.filter(param => !urlObj.searchParams.has(param))
+        if (missingParams.length > 0) {
+          console.error('[Xunfei LLM] Missing required parameters:', missingParams)
+          setError(`WebSocket URL 缺少必要的参数: ${missingParams.join(', ')}\n\n请检查后端签名生成逻辑。`)
+          return
+        }
+      } catch (urlErr: any) {
+        console.error('[Xunfei LLM] Failed to parse URL:', urlErr)
+        setError(`WebSocket URL 格式无效: ${urlErr.message}\n\n请检查后端返回的 URL 格式是否正确。`)
         return
       }
 
@@ -247,11 +281,39 @@ function CreateTripModalXunfeiLLM({ isOpen, onClose, onSuccess }: CreateTripModa
         }
       }
 
-      console.log('[Xunfei LLM] Connecting to WebSocket:', ws_url.replace(/signature=[^&]+/, 'signature=***')) // 隐藏签名
-      console.log('[Xunfei LLM] Session ID:', session_id)
+      // 详细的调试信息
+      console.log('========================================')
+      console.log('[Xunfei LLM] WebSocket 连接调试信息')
+      console.log('========================================')
+      console.log('完整 WebSocket URL:', ws_url)
+      console.log('URL 协议:', ws_url.substring(0, 6))
+      console.log('URL 主机:', ws_url.match(/wss?:\/\/([^\/]+)/)?.[1] || '未找到')
+      console.log('当前页面协议:', window.location.protocol)
+      console.log('当前页面主机:', window.location.host)
+      console.log('Session ID:', session_id)
+      console.log('URL 长度:', ws_url.length)
+      console.log('是否包含双重编码:', ws_url.includes('%252') || ws_url.includes('%253'))
+      console.log('========================================')
+      
+      // 检查 URL 格式
+      try {
+        const urlObj = new URL(ws_url)
+        console.log('[Xunfei LLM] URL 解析成功:', {
+          protocol: urlObj.protocol,
+          hostname: urlObj.hostname,
+          pathname: urlObj.pathname,
+          search: urlObj.search.substring(0, 100) + '...'
+        })
+      } catch (urlErr: unknown) {
+        const errorMessage = urlErr instanceof Error ? urlErr.message : String(urlErr)
+        console.error('[Xunfei LLM] URL 解析失败:', urlErr)
+        setError(`WebSocket URL 格式错误: ${errorMessage}`)
+        return
+      }
 
       // 2. 建立WebSocket连接（直接连接到讯飞大模型服务器，不经过后端）
       let connectionTimeout: number | null = null
+      console.log('[Xunfei LLM] 正在创建 WebSocket 连接...')
       const ws = new WebSocket(ws_url)
       wsRef.current = ws
 
@@ -343,9 +405,28 @@ function CreateTripModalXunfeiLLM({ isOpen, onClose, onSuccess }: CreateTripModa
         console.error('[Xunfei LLM] WebSocket error event:', error)
         console.error('[Xunfei LLM] WebSocket readyState:', ws.readyState)
         console.error('[Xunfei LLM] WebSocket URL (masked):', ws_url.replace(/signature=[^&]+/, 'signature=***'))
+        console.error('[Xunfei LLM] Full WebSocket URL length:', ws_url.length)
+        
+        // 尝试解析 URL 以检查格式
+        try {
+          const urlObj = new URL(ws_url)
+          console.error('[Xunfei LLM] URL parsed successfully:', {
+            protocol: urlObj.protocol,
+            hostname: urlObj.hostname,
+            pathname: urlObj.pathname,
+            searchParamsCount: urlObj.searchParams ? Array.from(urlObj.searchParams.keys()).length : 0
+          })
+        } catch (urlErr) {
+          console.error('[Xunfei LLM] Failed to parse URL:', urlErr)
+        }
+        
         // WebSocket error 事件不提供详细信息，我们需要在 onclose 中获取
         // 这里先设置一个通用错误，onclose 会更新更详细的信息
         // 注意：error 事件通常在连接失败时触发，但详细信息在 onclose 中
+        if (!isRecording) {
+          // 如果连接失败时还未开始录音，立即显示错误
+          setError('连接失败，请检查网络连接和后端服务状态')
+        }
       }
 
       ws.onclose = (event) => {
@@ -359,25 +440,55 @@ function CreateTripModalXunfeiLLM({ isOpen, onClose, onSuccess }: CreateTripModa
           code: event.code,
           reason: event.reason,
           wasClean: event.wasClean,
-          readyState: ws.readyState
+          readyState: ws.readyState,
+          url: ws_url.substring(0, 200) + '...' // 只显示前200个字符
         })
         
-        // 如果连接异常关闭且还在录音状态，显示错误
+        // 检查连接是否从未成功建立
+        const neverOpened = ws.readyState === WebSocket.CLOSED && !event.wasClean
+        
+        // 如果连接异常关闭，显示错误
         // 注意：如果连接从未成功打开（readyState 一直是 CONNECTING），也会触发 onclose
-        if (isRecording && event.code !== 1000 && event.code !== 1001) {
+        if ((isRecording || neverOpened) && event.code !== 1000 && event.code !== 1001) {
           let errorMsg = '连接已关闭'
           if (event.code === 1006) {
-            errorMsg = `连接异常关闭 (${event.code})，可能原因：\n1) URL签名验证失败（检查后端签名算法）\n2) 网络问题或防火墙阻止\n3) 讯飞服务器拒绝连接\n\n请检查：\n- 浏览器控制台的详细错误信息\n- 后端日志中的签名生成过程\n- 网络连接是否正常`
+            errorMsg = `WebSocket 连接失败 (${event.code})`
+            
+            // 提供详细的诊断信息
+            const diagnosticInfo = []
+            diagnosticInfo.push('\n可能的原因：')
+            diagnosticInfo.push('1. 后端签名验证失败 - 请检查后端日志中的签名生成过程')
+            diagnosticInfo.push('2. URL 格式错误或参数编码问题 - 请检查后端返回的 URL')
+            diagnosticInfo.push('3. 网络问题或防火墙阻止 - 请检查网络连接')
+            diagnosticInfo.push('4. 讯飞服务器拒绝连接 - 请检查 API 密钥是否正确')
+            diagnosticInfo.push('5. 后端服务未正常运行 - 请检查后端服务状态')
+            
+            diagnosticInfo.push('\n排查步骤：')
+            diagnosticInfo.push('1. 打开浏览器开发者工具（F12），查看 Console 和 Network 标签')
+            diagnosticInfo.push('2. 检查后端接口 /api/v1/voice/xunfei-llm/ws-url 是否正常返回')
+            diagnosticInfo.push('3. 检查后端日志，确认签名生成是否正确')
+            diagnosticInfo.push('4. 确认讯飞 API 密钥（APP_ID, ACCESS_KEY_ID, ACCESS_KEY_SECRET）配置正确')
+            diagnosticInfo.push('5. 检查网络连接，确认可以访问讯飞服务器')
+            
+            errorMsg += diagnosticInfo.join('\n')
           } else if (event.code === 1002) {
-            errorMsg = `协议错误 (${event.code})，请检查后端生成的URL格式是否正确`
+            errorMsg = `协议错误 (${event.code})，请检查后端生成的URL格式是否正确\n\n建议：检查后端返回的 WebSocket URL 是否以 wss:// 开头，参数是否正确编码`
           } else if (event.code === 1003) {
-            errorMsg = `数据格式错误 (${event.code})`
+            errorMsg = `数据格式错误 (${event.code})，请检查后端返回的 URL 参数格式`
           } else if (event.code >= 4000) {
-            errorMsg = `服务端错误 (${event.code}): ${event.reason || '请检查后端日志和讯飞服务状态'}`
+            errorMsg = `服务端错误 (${event.code}): ${event.reason || '请检查后端日志和讯飞服务状态'}\n\n可能是讯飞 API 返回的错误，请检查：\n1. API 密钥是否正确\n2. API 配额是否充足\n3. 后端日志中的详细错误信息`
           } else {
-            errorMsg = `连接关闭 (${event.code}): ${event.reason || '未知原因'}`
+            errorMsg = `连接关闭 (${event.code}): ${event.reason || '未知原因'}\n\n请检查：\n1. 后端服务是否正常运行\n2. 网络连接是否正常\n3. 浏览器控制台的详细错误信息`
           }
+          
           console.error('[Xunfei LLM] Connection failed:', errorMsg)
+          console.error('[Xunfei LLM] Close event details:', {
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+            readyState: ws.readyState
+          })
+          
           setError(errorMsg)
         }
         
@@ -385,12 +496,21 @@ function CreateTripModalXunfeiLLM({ isOpen, onClose, onSuccess }: CreateTripModa
           processorRef.current.disconnect()
           processorRef.current = null
         }
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach(track => track.stop())
+          mediaStreamRef.current = null
+        }
         if (isRecording) {
           setIsRecording(false)
           if (timerRef.current) {
             clearInterval(timerRef.current)
             timerRef.current = null
           }
+        }
+        
+        // 清理 WebSocket 引用
+        if (wsRef.current === ws) {
+          wsRef.current = null
         }
       }
 

@@ -39,7 +39,7 @@ class ItineraryResponse(BaseModel):
 
 class BudgetCategory(BaseModel):
     """预算类别"""
-    name: str  # e.g., "住宿", "餐饮", "交通", "门票"
+    name: str  # "住宿", "餐饮", "交通", "门票", "购物", "其他"
     estimated_cny: float
 
 

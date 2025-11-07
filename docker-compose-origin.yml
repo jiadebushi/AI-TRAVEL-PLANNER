@@ -1,6 +1,8 @@
 services:
   backend:
-    image: hanxi011/ai_travel_planner-backend:latest
+    build:
+      context: ./travel_backend
+      dockerfile: Dockerfile
     container_name: ai-travel-backend
     ports:
       - "8000:8000"
@@ -9,9 +11,10 @@ services:
     env_file:
       - ./travel_backend/.env
     volumes:
-      # 日志目录
+      # 如果需要开发时热重载，可以挂载代码目录
+      # - ./travel_backend:/app
       - ./travel_backend/logs:/app/logs
-      # 同步容器时间与宿主机时间（重要：用于讯飞 API 签名验证）
+      # 同步容器时间与宿主机时间
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     restart: unless-stopped
@@ -23,11 +26,14 @@ services:
       start_period: 40s
 
   frontend:
-    image: hanxi011/ai_travel_planner-frontend:latest
+    build:
+      context: ./travel_frontend
+      dockerfile: Dockerfile
     container_name: ai-travel-frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
     restart: unless-stopped
+
 

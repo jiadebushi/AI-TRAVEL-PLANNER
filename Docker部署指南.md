@@ -117,6 +117,119 @@ docker load -i ai-travel-frontend-latest.tar
 
 然后使用 `docker-compose up -d` 或单独运行容器。
 
+## 推送镜像到 Docker Hub
+
+### 前置要求
+
+1. **Docker Hub 账号**: 在 [Docker Hub](https://hub.docker.com/) 注册账号
+2. **登录 Docker Hub**: 
+   ```bash
+   docker login
+   ```
+   输入你的 Docker Hub 用户名和密码
+
+### 推送流程
+
+#### 1. 查看本地镜像 ID
+
+首先查看已构建的镜像：
+
+```bash
+docker images | grep ai-travel
+```
+
+记录镜像 ID（IMAGE ID 列），例如：
+- `ai_travel_planner-backend:latest` 的 ID 为 `651xxx`
+- `ai_travel_planner-frontend:latest` 的 ID 为 `5e0xxx`
+
+#### 2. 给镜像打标签
+
+使用你的 Docker Hub 用户名给镜像打标签：
+
+```bash
+# 给后端镜像打标签
+docker tag <后端镜像ID> <你的用户名>/ai_travel_planner-backend:latest
+
+# 给前端镜像打标签
+docker tag <前端镜像ID> <你的用户名>/ai_travel_planner-frontend:latest
+```
+
+**示例**（假设用户名为 `cc01`）：
+
+```bash
+docker tag 661f9d904f9b cc01/ai_travel_planner-backend:latest
+docker tag 7e0270accac2 cc01/ai_travel_planner-frontend:latest
+```
+
+#### 3. 推送到 Docker Hub
+
+```bash
+# 推送后端镜像
+docker push <你的用户名>/ai_travel_planner-backend:latest
+
+# 推送前端镜像
+docker push <你的用户名>/ai_travel_planner-frontend:latest
+```
+
+**示例**：
+
+```bash
+docker push cc01/ai_travel_planner-backend:latest
+docker push cc01/ai_travel_planner-frontend:latest
+```
+
+#### 4. 验证推送
+
+在 Docker Hub 网页上查看你的仓库，确认镜像已成功推送。
+
+### 使用推送的镜像
+
+其他用户可以通过以下方式拉取和使用你的镜像：
+
+#### 方式一：使用提供的 docker-compose.yml（推荐）
+
+项目根目录的 `docker-compose.yml` 已配置为使用 Docker Hub 上的镜像，用户只需：
+
+1. **拉取镜像**（可选，docker-compose 会自动拉取）：
+   ```bash
+   docker pull cc01/ai_travel_planner-backend:latest
+   docker pull cc01/ai_travel_planner-frontend:latest
+   ```
+
+2. **配置环境变量**：
+   ```bash
+   cp travel_backend/.env.example travel_backend/.env
+   # 编辑 travel_backend/.env，填入 API 密钥
+   ```
+
+3. **启动服务**：
+   ```bash
+   docker-compose up -d
+   ```
+
+#### 方式二：手动拉取和运行
+
+```bash
+# 拉取镜像
+docker pull cc01/ai_travel_planner-backend:latest
+docker pull cc01/ai_travel_planner-frontend:latest
+
+# 运行容器
+docker run -d \
+  --name ai-travel-backend \
+  -p 8000:8000 \
+  --env-file ./travel_backend/.env \
+  -v /etc/localtime:/etc/localtime:ro \
+  -v /etc/timezone:/etc/timezone:ro \
+  cc01/ai_travel_planner-backend:latest
+
+docker run -d \
+  --name ai-travel-frontend \
+  -p 3000:80 \
+  cc01/ai_travel_planner-frontend:latest
+```
+
+
 ## 常用命令
 
 ### 查看运行中的容器

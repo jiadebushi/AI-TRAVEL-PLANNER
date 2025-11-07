@@ -7,7 +7,7 @@ from app.data.expense_repository import get_expense_repository, ExpenseRepositor
 from app.data.map_repository import get_map_repository, MapRepository
 from app.models.llm_models import ItineraryResponse
 from app.models.api_models import TripInput
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import json
 
 
@@ -220,8 +220,11 @@ class TripService:
                 print(f"生成第{day_number}天地图失败: {e}")
                 continue
     
-    def _map_transport_mode(self, mode: str) -> str:
+    def _map_transport_mode(self, mode: Optional[str]) -> str:
         """将中文交通方式转换为API所需的格式"""
+        if not mode:
+            return "driving"  # 默认使用驾车
+        
         mode_map = {
             "步行": "walking",
             "地铁": "transit",

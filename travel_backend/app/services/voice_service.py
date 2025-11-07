@@ -5,7 +5,7 @@ import hashlib
 import base64
 import json
 import hmac
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode, quote
 import websocket
 import ssl
@@ -91,7 +91,8 @@ class VoiceService:
             raise ValueError("讯飞大模型配置未设置，请检查 XUNFEI_LLM_APP_ID、XUNFEI_LLM_ACCESS_KEY_ID、XUNFEI_LLM_ACCESS_KEY_SECRET")
         
         # 1. 生成时间戳（UTC格式）
-        now = datetime.now()
+        # 修改 now 为北京时间
+        now = datetime.now(timezone(timedelta(hours=8)))
         utc_str = now.strftime('%Y-%m-%dT%H:%M:%S+0800')
         
         # 2. 生成UUID（如果没有提供）

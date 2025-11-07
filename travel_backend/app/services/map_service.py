@@ -74,13 +74,20 @@ class MapService:
                         location = poi.get("location", "").split(",")
                         if len(location) == 2:
                             poi_id = f"P{idx:03d}"
+                            # 处理 type 字段，可能是字符串或列表
+                            poi_type = poi.get("type", "")
+                            if isinstance(poi_type, list):
+                                poi_type = ", ".join(poi_type)
+                            poi_address = poi.get("address", "")
+                            description = f"{poi_type} | {poi_address}" if poi_type else poi_address
+                            
                             pois.append({
                                 "id": poi_id,
                                 "name": poi.get("name", ""),
                                 "category": keyword,
                                 "lat": float(location[1]),
                                 "lng": float(location[0]),
-                                "description": poi.get("type", "") + " | " + poi.get("address", "")
+                                "description": description
                             })
                 return pois
         except Exception as e:
@@ -144,15 +151,16 @@ class MapService:
     async def _get_eta_amap(self, point_a: Dict[str, float], point_b: Dict[str, float],
                            mode: str) -> Dict[str, Any]:
         """使用高德地图API获取路线规划"""
-        url = "https://restapi.amap.com/v3/direction/driving"
-        
-        # 转换交通方式
+        # 根据交通方式选择不同的API端点
         mode_map = {
             "driving": "driving",
             "walking": "walking",
             "transit": "transit"
         }
         amap_mode = mode_map.get(mode, "driving")
+        
+        # 构建正确的API URL
+        url = f"https://restapi.amap.com/v3/direction/{amap_mode}"
         
         origin = f"{point_a['lng']},{point_a['lat']}"
         destination = f"{point_b['lng']},{point_b['lat']}"
@@ -171,14 +179,42 @@ class MapService:
                 data = response.json()
                 
                 if data.get("status") == "1" and data.get("route"):
-                    route = data["route"]["paths"][0]
-                    duration_seconds = route.get("duration", 0)
-                    distance_meters = route.get("distance", 0)
+                    route = data["route"]
+                    
+                    # 根据不同交通方式，数据结构不同
+                    if amap_mode == "transit":
+                        # 公交路线：返回 transits 数组
+                        transits = route.get("transits", [])
+                        if not transits:
+                            return {"duration_minutes": 0, "distance_meters": 0}
+                        transit = transits[0]
+                        duration_seconds = transit.get("duration", 0)
+                        distance_meters = transit.get("distance", 0)
+                    else:
+                        # 步行和驾车：返回 paths 数组
+                        paths = route.get("paths", [])
+                        if not paths:
+                            return {"duration_minutes": 0, "distance_meters": 0}
+                        path = paths[0]
+                        duration_seconds = path.get("duration", 0)
+                        distance_meters = path.get("distance", 0)
+                    
+                    # 转换为数字（如果是字符串则先转浮点数再转整数）
+                    try:
+                        duration_seconds = float(duration_seconds) if duration_seconds else 0
+                        distance_meters = float(distance_meters) if distance_meters else 0
+                    except (ValueError, TypeError) as e:
+                        print(f"高德地图路线规划数据转换失败: {e}, duration={duration_seconds}, distance={distance_meters}")
+                        duration_seconds = 0
+                        distance_meters = 0
                     
                     return {
-                        "duration_minutes": int(duration_seconds / 60),
-                        "distance_meters": int(distance_meters)
+                        "duration_minutes": int(duration_seconds / 60) if duration_seconds > 0 else 0,
+                        "distance_meters": int(distance_meters) if distance_meters > 0 else 0
                     }
+                else:
+                    # API返回错误，记录详细信息
+                    print(f"高德地图路线规划API返回错误: status={data.get('status')}, info={data.get('info', '')}")
                 return {"duration_minutes": 0, "distance_meters": 0}
         except Exception as e:
             print(f"高德地图路线规划失败: {e}")
