@@ -123,71 +123,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 在 Supabase 中创建以下表结构：
 
-#### users 表
-```sql
-CREATE TABLE users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    hashed_password TEXT NOT NULL,
-    preferences TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-#### trip_headers 表
-```sql
-CREATE TABLE trip_headers (
-    trip_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
-    trip_name VARCHAR(255) NOT NULL,
-    destination VARCHAR(255) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    status VARCHAR(50) DEFAULT 'draft',
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-#### trip_details 表
-```sql
-CREATE TABLE trip_details (
-    detail_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    trip_id UUID REFERENCES trip_headers(trip_id) ON DELETE CASCADE,
-    day_number INTEGER NOT NULL,
-    theme VARCHAR(255),
-    activities JSONB,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-#### budgets 表
-```sql
-CREATE TABLE budgets (
-    budget_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    trip_id UUID REFERENCES trip_headers(trip_id) ON DELETE CASCADE,
-    estimated_total DECIMAL(10, 2) NOT NULL,
-    categories JSONB,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-#### expenses 表
-```sql
-CREATE TABLE expenses (
-    expense_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    trip_id UUID REFERENCES trip_headers(trip_id) ON DELETE CASCADE,
-    category VARCHAR(100) NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
-    currency VARCHAR(10) DEFAULT 'CNY',
-    description TEXT,
-    timestamp TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
+见[数据库表](./database_schema.sql)
 
 ## 运行应用
 
@@ -235,25 +171,15 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ## 注意事项
 
-1. **科大讯飞语音服务**: 当前实现为简化版本，实际应用中需要完整实现WebSocket连接。请参考科大讯飞官方文档。
+1. **LangChain与千问API**: 使用LangChain的ChatOpenAI兼容接口调用千问API，确保API密钥和端点配置正确。
 
-2. **LangChain与千问API**: 使用LangChain的ChatOpenAI兼容接口调用千问API，确保API密钥和端点配置正确。
+2. **数据库**: 本项目使用Supabase作为数据库，也可以使用其他PostgreSQL数据库，只需修改数据库连接配置。
 
-3. **数据库**: 本项目使用Supabase作为数据库，也可以使用其他PostgreSQL数据库，只需修改数据库连接配置。
-
-4. **生产环境**: 生产环境部署时，请：
+3. **生产环境**: 生产环境部署时，请：
    - 修改CORS配置为具体的前端域名
    - 使用强密钥替换SECRET_KEY
    - 配置HTTPS
    - 使用环境变量管理敏感信息
-
-## 开发计划
-
-- [ ] 完善科大讯飞WebSocket语音转文本实现
-- [ ] 添加缓存机制（Redis）
-- [ ] 添加任务队列（Celery）处理异步任务
-- [ ] 添加单元测试
-- [ ] 添加API限流和错误处理优化
 
 ## License
 
