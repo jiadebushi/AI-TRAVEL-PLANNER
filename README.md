@@ -1,127 +1,179 @@
-AI Travel Planner - 部署与运行指南
+# 🗺️ AI Travel Planner
 
-## 一、前置条件
+> 基于 AI 大语言模型的智能旅行规划平台，支持语音输入、智能行程生成和费用管理
 
-- 已安装 Docker（建议 20.10+）和 Docker Compose（2.x+）
-- 可访问网络用于拉取镜像或从文件导入镜像
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18.2.0-61DAFB?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.2.2-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 
-## 二、获取代码与镜像
+## ✨ 核心亮点
 
-1) 克隆仓库
+- 🤖 **AI 驱动**：集成通义千问 LLM，智能生成个性化旅行计划
+- 🎤 **语音交互**：支持科大讯飞实时语音转文字，语音创建行程和记录费用
+- 🗺️ **地图集成**：自动检索 POI、规划路线、预估交通耗时
+- 💰 **智能预算**：AI 自动估算预算，实时记录开销，预算对比分析
+- 🐳 **容器化部署**：完整的 Docker 支持，一键启动
+- 🔒 **安全设计**：环境变量隔离，API Key 不打包进镜像
+
+## 🚀 功能特性
+
+### 用户系统
+- ✅ 用户注册/登录（JWT 认证）
+- ✅ 用户资料管理
+- ✅ 旅行偏好设置
+
+### 智能行程规划
+- ✅ **文本输入**：通过自然语言描述生成行程
+- ✅ **语音输入**：实时语音转文字，自动解析旅行意图
+- ✅ **POI 检索**：自动搜索景点、餐厅、酒店
+- ✅ **智能决策**：LLM 优化每日行程安排和交通方式
+- ✅ **路线规划**：自动计算景点间距离和交通耗时
+- ✅ **地图可视化**：展示行程路线和地点标记
+
+### 费用管理
+- ✅ **预算估算**：AI 根据行程自动估算总预算和分类预算
+- ✅ **开销记录**：支持文本和语音两种方式记录实际开销
+- ✅ **智能分类**：LLM 自动识别和分类消费项目
+- ✅ **预算对比**：实时对比预算与实际支出，生成分析报告
+
+## 📁 项目结构
+
+```
+AI_Travel_Planner/
+├── travel_backend/          # 后端服务 (FastAPI)
+│   ├── app/
+│   │   ├── api/            # API 路由层
+│   │   │   ├── auth.py     # 认证相关
+│   │   │   ├── plan.py     # 行程规划
+│   │   │   ├── budget.py   # 费用管理
+│   │   │   └── voice_realtime.py  # 实时语音
+│   │   ├── services/       # 业务逻辑层
+│   │   │   ├── ai_service.py      # LLM 服务
+│   │   │   ├── voice_service.py   # 语音处理
+│   │   │   ├── map_service.py     # 地图服务
+│   │   │   ├── trip_service.py    # 行程服务
+│   │   │   └── expense_service.py # 费用服务
+│   │   ├── data/           # 数据访问层
+│   │   └── models/         # 数据模型
+│   ├── config/             # 配置管理
+│   └── main.py             # 应用入口
+│
+├── travel_frontend/        # 前端应用 (React + TypeScript)
+│   ├── src/
+│   │   ├── pages/          # 页面组件
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── TripListPage.tsx
+│   │   │   ├── TripDetailPage.tsx
+│   │   │   └── ProfilePage.tsx
+│   │   ├── components/     # 功能组件
+│   │   │   ├── CreateTripModal.tsx      # 创建行程
+│   │   │   ├── CreateTripModalXunfeiLLM.tsx  # 语音创建
+│   │   │   ├── ExpenseModal.tsx         # 费用录入
+│   │   │   └── ExpenseModalXunfeiLLM.tsx     # 语音录入
+│   │   ├── api/            # API 调用
+│   │   └── routes/         # 路由配置
+│   └── nginx.conf          # Nginx 配置
+│
+├── docker-compose.yml      # Docker Compose 配置
+├── build-docker.sh        # 镜像构建脚本 (Linux/macOS)
+└── build-docker.ps1       # 镜像构建脚本 (Windows)
+```
+
+## 🛠️ 技术栈
+
+### 后端
+- **框架**: FastAPI
+- **LLM**: 通义千问 (通过 LangChain)
+- **语音**: 科大讯飞 API
+- **地图**: 高德地图 / 百度地图 API
+- **数据库**: Supabase (PostgreSQL)
+- **认证**: JWT
+- **容器**: Docker
+
+### 前端
+- **框架**: React 18 + TypeScript
+- **构建工具**: Vite
+- **路由**: React Router
+- **HTTP 客户端**: Axios
+- **部署**: Nginx (Docker)
+
+## 🚀 快速开始
+具体见文档：[运行与部署](./README-运行与部署.md) 
+
+### 前置要求
+
+- Docker & Docker Compose
+- Supabase 项目（用于数据库）
+- API 密钥：
+  - 通义千问 API Key
+  - 科大讯飞 API（用于语音功能）
+  - 高德地图 API（用于地图功能）
+
+### 1. 克隆项目
 
 ```bash
-git clone https://github.com/<your-org>/<your-repo>.git
+git clone https://github.com/jiadebushi/AI-TRAVEL-PLANNER.git
 cd AI_Travel_Planner
 ```
 
-2) 准备 Docker 镜像（两种方式二选一）
-
-- 方式 A：从文件导入（适合对外分发的离线包）
+### 2. 配置环境变量
 
 ```bash
-docker load -i ai-travel-backend-latest.tar
-docker load -i ai-travel-frontend-latest.tar
-```
-
-- 方式 B：本地构建（需要能访问基础镜像）
-
-```bash
-docker-compose build
-```
-
-## 三、配置环境变量（必做）
-
-后端运行依赖环境变量，不会内置在镜像中。请在首次运行前创建并填写：
-
-```bash
+# 复制环境变量示例文件
 cp travel_backend/.env.example travel_backend/.env
 
-# 编辑 travel_backend/.env，填入你自己的密钥与配置
+# 编辑 travel_backend/.env，填入你的 API 密钥
+# 必需配置：
+# - QIANWEN_API_KEY (通义千问)
+# - SECRET_KEY (JWT 密钥)
+# - SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_KEY
 ```
 
-关键配置（示例，完整项见 `.env.example`）：
-
-```env
-# LLM（通义千问）
-QIANWEN_API_KEY=你的_qianwen_key
-QIANWEN_API_BASE=https://dashscope.aliyuncs.com/compatible-mode/v1
-
-# JWT
-SECRET_KEY=随机且足够复杂的字符串
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Supabase（PostgreSQL 后端）
-SUPABASE_URL=你的_supabase_url
-SUPABASE_KEY=你的_supabase_anon_key
-SUPABASE_SERVICE_KEY=你的_supabase_service_key
-
-# 可选：语音/地图等
-# XUNFEI_APP_ID=...
-# XUNFEI_API_KEY=...
-# AMAP_API_KEY=...
-```
-
-说明：`.env` 文件不会被打包进镜像（已通过 `.dockerignore` 与 `travel_backend/.dockerignore` 排除），他人使用时也必须填入自己的密钥，安全不外泄。
-
-## 四、启动与访问
-
-1) 启动服务
+### 3. 启动服务
 
 ```bash
+# 使用 Docker Compose 启动
 docker-compose up -d
-```
 
-2) 访问地址
-
-- 前端：`http://localhost:3000`
-- 后端 API：`http://localhost:8000`
-- API 文档（Swagger）：`http://localhost:8000/docs`
-- 健康检查：`http://localhost:8000/health`
-
-## 五、常用运维命令
-
-- 查看状态：
-
-```bash
+# 查看服务状态
 docker-compose ps
+
+# 查看日志
+docker-compose logs -f
 ```
 
-- 查看日志：
+### 4. 访问应用
 
-```bash
-docker-compose logs -f          # 全部
-docker-compose logs -f backend  # 仅后端
-docker-compose logs -f frontend # 仅前端
-```
+- 🌐 **前端**: http://localhost:3000
+- 🔌 **后端 API**: http://localhost:8000
+- 📚 **API 文档**: http://localhost:8000/docs
 
-- 停止：
+## 📦 Docker 镜像部署
+详细的Docker部署说明请参考：[Docker 部署指南](./Docker部署指南.md)
 
-```bash
-docker-compose stop           # 停止但不移除
-docker-compose down           # 停止并移除容器与网络
-docker-compose down -v        # 额外移除数据卷（谨慎）
-```
+## 🔒 安全说明
 
-## 六、镜像安全与再分发说明
+- ✅ `.env` 文件**不会**被打包进 Docker 镜像
+- ✅ 每个用户需要配置自己的 API Key
+- ✅ 镜像中不包含任何敏感信息
+- ✅ 运行时通过 `env_file` 从宿主机读取配置
 
-- 镜像内不包含任何 `.env` 或密钥文件，运行时通过 `docker-compose.yml` 的 `env_file: ./travel_backend/.env` 从宿主机注入。
-- 对外发布时，请连同 `travel_backend/.env.example` 一并提供，对方需复制为 `.env` 并填入自己的密钥后方可运行。
+## 📚 文档
 
-## 七、故障排查（FAQ）
+- [Docker 部署指南](./Docker部署指南.md) - 详细的 Docker 部署说明
+- [运行与部署](./README-运行与部署.md) - 完整的运行指南
+- [后端 API 文档](./travel_backend/docs/API接口文档.md) - API 接口说明
 
-- 前端无法访问后端
-  - 确认后端容器健康：`curl http://localhost:8000/health`
-  - 检查前端 `nginx` 代理是否正常（容器日志）。
+## 🤝 贡献
 
-- 后端启动失败（循环重启）
-  - 多为 `.env` 未配置或缺少必要项，按第三步补齐。
-  - 查看日志：`docker-compose logs -f backend`。
+欢迎提交 Issue 和 Pull Request！
 
-- 构建基础镜像失败 / 拉取慢
-  - 配置 Docker 镜像源（参考 `README-Docker.md` 中“镜像源 403 错误”章节）。
+## 📄 许可证
 
-## 八、开发者提示
+[MIT License](LICENSE)
 
-- 本地开发可直接在 `travel_frontend` 使用 `npm run dev` 并通过 Vite 代理到后端；生产镜像中由 Nginx 负责前端与后端 `/api` 的转发。
+---
+
+**⭐ 如果这个项目对你有帮助，请给个 Star！**
 
