@@ -1,0 +1,104 @@
+# ============================================
+# Backend (Python) - travel_backend/
+# ============================================
+travel_backend/__pycache__/
+travel_backend/*.py[cod]
+travel_backend/*$py.class
+travel_backend/*.so
+travel_backend/.Python
+travel_backend/build/
+travel_backend/develop-eggs/
+travel_backend/dist/
+travel_backend/downloads/
+travel_backend/eggs/
+travel_backend/.eggs/
+travel_backend/lib/
+travel_backend/lib64/
+travel_backend/parts/
+travel_backend/sdist/
+travel_backend/var/
+travel_backend/wheels/
+travel_backend/*.egg-info/
+travel_backend/.installed.cfg
+travel_backend/*.egg
+
+# Backend Virtual Environment
+travel_backend/venv/
+travel_backend/env/
+travel_backend/ENV/
+travel_backend/.venv
+
+# Backend Environment variables
+travel_backend/.env
+travel_backend/.env.local
+travel_backend/.env.*.local
+
+# Backend Testing
+travel_backend/.pytest_cache/
+travel_backend/.coverage
+travel_backend/htmlcov/
+
+# Backend Database
+travel_backend/*.db
+travel_backend/*.sqlite
+travel_backend/*.sqlite3
+
+# ============================================
+# Frontend (Node.js) - travel_frontend/
+# ============================================
+travel_frontend/node_modules/
+travel_frontend/npm-debug.log*
+travel_frontend/yarn-debug.log*
+travel_frontend/yarn-error.log*
+travel_frontend/pnpm-debug.log*
+travel_frontend/lerna-debug.log*
+
+# Frontend Build outputs
+travel_frontend/dist/
+travel_frontend/dist-ssr/
+travel_frontend/build/
+
+# Frontend Environment variables
+travel_frontend/.env
+travel_frontend/.env.local
+travel_frontend/.env.*.local
+travel_frontend/*.local
+
+# Frontend Testing
+travel_frontend/.nyc_output/
+
+# ============================================
+# Global (适用于整个项目)
+# ============================================
+# Environment variables (根目录)
+.env
+.env.local
+.env.*.local
+*.local
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

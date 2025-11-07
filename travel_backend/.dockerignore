@@ -1,0 +1,46 @@
+.git
+.gitignore
+.gitattributes
+
+# Do not include sensitive env files
+.env
+.env.local
+.env.*
+*.env
+
+# Python cache and build outputs
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+build/
+dist/
+var/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Logs and temp
+*.log
+*.tmp
+*.temp
+.cache/
+
+# Tests, docs, and repo files not needed in image
+.tests/
+tests/
+docs/
+*.md
+README.md
+
+# IDE/editor
+.vscode/
+.idea/
+*.sw?
